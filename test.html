@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pixel School</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: black;
+        }
+
+        canvas {
+            display: block;
+            margin: auto;
+            background: #111;
+
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="game"></canvas>
+
+    <script>
+
+        // =========================
+        // CANVAS
+        // =========================
+
+        // =========================
+// CANVAS
+// =========================
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+resizeCanvas();
+
+window.addEventListener("resize", resizeCanvas);
+
+ctx.imageSmoothingEnabled = false;
+
+        // =========================
+        // MAP
+        // =========================
+
+        const mapImg = new Image();
+        mapImg.src = "mapXoaCong.png";
+
+        const congImg = new Image();
+        congImg.src = "cong.png";
+
+        // KÍCH THƯỚC MAP THẬT
+        const MAP_WIDTH = 1280;
+        const MAP_HEIGHT = 960;
+        
+        let GATE_X = 535;
+        let GATE_Y = 665;
+        // =========================
+        // CAMERA
+        // =========================
+
+        const camera = {
+            x: 0,
+            y: 0,
+            zoom: 2.5
+        };
+
+        // =========================
+        // PLAYER ANIMATION
+        // =========================
+
+        const animations = {
+            down: [],
+            up: [],
+            left: [],
+            right: []
+        };
+
+        function loadFrames(direction) {
+
+            for (let i = 1; i <= 4; i++) {
+
+                const img = new Image();
+
+                img.src = `${direction}${i}.png`;
+
+                animations[direction].push(img);
+            }
+        }
+
+        loadFrames("down");
+        loadFrames("up");
+        loadFrames("left");
+        loadFrames("right");
+
+        // =========================
+        // PLAYER
+        // =========================
+
+        const player = {
+
+            x: 620,
+            y: 760,
+
+            // SPRITE SIZE
+            width: 20,
+            height: 15,
+
+            speed: 1,
+
+            direction: "up",
+
+            currentFrame: 0,
+
+            frameTimer: 0,
+            frameDelay: 120,
+
+            moving: false
+        };
+
+        // =========================
+        // HITBOXES
+        // =========================
+
+        const obstacles = [
+
+            // ======================
+            // A1
+            // ======================
+
+            {
+                x: 250,
+                y: 40,
+                width: 690,
+                height: 210
+            },
+
+            // ======================
+            // B
+            // ======================
+
+            {
+                x: 90,
+                y: 180,
+                width: 180,
+                height: 520
+            },
+
+            // ======================
+            // C
+            // ======================
+
+            {
+                x: 930,
+                y: 190,
+                width: 180,
+                height: 509
+            },
+
+            // ======================
+            // HÀNG RÀO DƯỚI
+            // ======================
+
+            {
+                x: 0,
+                y: 730,
+                width: 400,
+                height: 90
+            },
+
+            {
+                x: 860,
+                y: 730,
+                width: 420,
+                height: 90
+            },
+
+            // ======================
+            // CỘT CỔNG
+            // ======================
+
+            {
+                x: 400,
+                y: 720,
+                width: 40,
+                height: 130
+            },
+
+            {
+                x: 510,
+                y: 670,
+                width: 40,
+                height: 180
+            },
+
+            {
+                x: 705,
+                y: 670,
+                width: 40,
+                height: 180
+            },
+
+            {
+                x: 800,
+                y: 720,
+                width: 45,
+                height: 130
+            },
+
+            // ======================
+            // BỒN CÂY
+            // ======================
+
+            {
+                x: 320,
+                y: 305,
+                width: 45,
+                height: 117
+            },
+
+            {
+                x: 310,
+                y: 476,
+                width: 48,
+                height: 166
+            },
+
+            {
+                x: 850,
+                y: 305,
+                width: 45,
+                height: 117
+            },
+
+            {
+                x: 858,
+                y: 476,
+                width: 48,
+                height: 166
+            },
+
+            // ======================
+            // CÂY
+            // ======================
+
+            { x: 390, y: 260, width: 38, height: 30 },
+            { x: 500, y: 260, width: 38, height: 30 },
+
+            { x: 700, y: 260, width: 38, height: 30 },
+            { x: 785, y: 260, width: 38, height: 30 },
+
+            { x: 440, y: 345, width: 47, height: 35 },
+            { x: 735, y: 345, width: 47, height: 35 },
+
+            { x: 415, y: 440, width: 47, height: 35 },
+            { x: 760, y: 440, width: 47, height: 35 },
+
+            { x: 430, y: 540, width: 47, height: 35 },
+            { x: 732, y: 540, width: 47, height: 35 },
+
+            { x: 397, y: 643, width: 47, height: 35 },
+            { x: 765, y: 640, width: 47, height: 35 }
+
+        ];
+
+        // =========================
+        // INPUT
+        // =========================
+
+        const keys = {};
+
+        document.addEventListener("keydown", (e) => {
+            keys[e.key.toLowerCase()] = true;
+        });
+
+        document.addEventListener("keyup", (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        // =========================
+        // COLLISION
+        // =========================
+
+        function isColliding(a, b) {
+
+            return (
+
+                a.x < b.x + b.width &&
+                a.x + a.width > b.x &&
+                a.y < b.y + b.height &&
+                a.y + a.height > b.y
+            );
+        }
+        document.addEventListener("keydown", e => {
+
+    if (e.key === "j") GATE_X -= 5;
+    if (e.key === "l") GATE_X += 5;
+
+    if (e.key === "i") GATE_Y -= 5;
+    if (e.key === "k") GATE_Y += 5;
+
+    console.log(GATE_X, GATE_Y);
+});
+
+        // =========================
+        // UPDATE
+        // =========================
+
+        function update(deltaTime) {
+
+            player.moving = false;
+
+            let nextX = player.x;
+            let nextY = player.y;
+
+            // ======================
+            // MOVE
+            // ======================
+
+            if (keys["w"] || keys["arrowup"]) {
+
+                nextY -= player.speed;
+
+                player.direction = "up";
+                player.moving = true;
+            }
+
+            if (keys["s"] || keys["arrowdown"]) {
+
+                nextY += player.speed;
+
+                player.direction = "down";
+                player.moving = true;
+            }
+
+            if (keys["a"] || keys["arrowleft"]) {
+
+                nextX -= player.speed;
+
+                player.direction = "left";
+                player.moving = true;
+            }
+
+            if (keys["d"] || keys["arrowright"]) {
+
+                nextX += player.speed;
+
+                player.direction = "right";
+                player.moving = true;
+            }
+
+            // ======================
+            // PLAYER HITBOX
+            // ======================
+
+            const nextPlayer = {
+
+                x: nextX,
+                y: nextY,
+
+                width: player.width,
+                height: player.height
+            };
+
+            // ======================
+            // COLLISION
+            // ======================
+
+            let blocked = false;
+
+            for (const obstacle of obstacles) {
+
+                if (isColliding(nextPlayer, obstacle)) {
+
+                    blocked = true;
+                    break;
+                }
+            }
+
+            if (!blocked) {
+
+                player.x = nextX;
+                player.y = nextY;
+            }
+
+            // ======================
+            // MAP LIMIT
+            // ======================
+
+            if (player.x < 0) {
+                player.x = 0;
+            }
+
+            if (player.y < 0) {
+                player.y = 0;
+            }
+
+            if (player.x + player.width > MAP_WIDTH) {
+                player.x = MAP_WIDTH - player.width;
+            }
+
+            if (player.y + player.height > MAP_HEIGHT) {
+                player.y = MAP_HEIGHT - player.height;
+            }
+
+            // ======================
+            // CAMERA FOLLOW
+            // ======================
+
+             camera.x =
+                player.x - canvas.width / (2 * camera.zoom);
+
+            camera.y =
+                player.y - canvas.height / (2 * camera.zoom);
+
+            //LIMIT CAMERA
+
+            if (camera.x < 0) camera.x = 0;
+            if (camera.y < 0) camera.y = 0;
+
+            const maxCamX =
+               MAP_WIDTH - canvas.width / camera.zoom;
+
+            const maxCamY =
+                MAP_HEIGHT - canvas.height / camera.zoom;
+
+            if (camera.x > maxCamX)
+               camera.x = maxCamX;
+
+            if (camera.y > maxCamY)
+               camera.y = maxCamY;
+
+            // ======================
+            // ANIMATION
+            // ======================
+
+            if (player.moving) {
+
+                player.frameTimer += deltaTime;
+
+                if (player.frameTimer >= player.frameDelay) {
+
+                    player.currentFrame++;
+
+                    if (player.currentFrame >= 4) {
+                        player.currentFrame = 0;
+                    }
+
+                    player.frameTimer = 0;
+                }
+
+            } else {
+
+                player.currentFrame = 0;
+            }
+        }
+
+        // =========================
+        // DRAW
+        // =========================
+
+        function draw() {
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+
+            // ======================
+            // CAMERA
+            // ======================
+
+            ctx.scale(camera.zoom, camera.zoom);
+
+            ctx.translate(
+                -camera.x,
+                -camera.y
+            );
+        
+            // ======================
+            // MAP
+            // ======================
+
+    // ======================
+// MAP
+// ======================
+
+if (mapImg.complete) {
+
+    ctx.drawImage(
+        mapImg,
+        0,
+        0,
+        MAP_WIDTH,
+        MAP_HEIGHT
+    );
+}
+    function drawGate() {
+
+    if (congImg.complete) {
+
+        ctx.drawImage(
+            congImg,
+            GATE_X,
+            GATE_Y
+        );
+    }
+}
+
+            // ======================
+            // PLAYER
+
+const currentAnimation =
+    animations[player.direction];
+
+const currentImage =
+    currentAnimation[player.currentFrame];
+
+function drawPlayer() {
+
+    if (
+        currentImage &&
+        currentImage.complete
+    ) {
+
+        ctx.drawImage(
+            currentImage,
+            player.x,
+            player.y,
+            player.width,
+            player.height
+        );
+    }
+}
+
+// ======================
+// GATE LAYER
+// ======================
+
+
+// Nếu nhân vật ở trong sân trường
+if (player.y + player.height < 760) {
+
+    drawPlayer();
+    drawGate();
+
+} else {
+
+    drawGate();
+    drawPlayer();
+}
+
+            // ======================
+            // PLAYER HITBOX
+            // ======================
+
+            ctx.strokeStyle = "lime";
+            ctx.lineWidth = 1;
+
+            ctx.strokeRect(
+                player.x,
+                player.y,
+                player.width,
+                player.height
+            );
+
+            // ======================
+            // OBSTACLE HITBOX
+            // ======================
+
+            ctx.strokeStyle = "red";
+
+            for (const obstacle of obstacles) {
+
+                ctx.strokeRect(
+                    obstacle.x,
+                    obstacle.y,
+                    obstacle.width,
+                    obstacle.height
+                );
+            }
+
+            ctx.restore();
+        }
+
+        // =========================
+        // GAME LOOP
+        // =========================
+
+        let lastTime = 0;
+
+        function gameLoop(timestamp) {
+
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            update(deltaTime);
+            draw();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        requestAnimationFrame(gameLoop);
+
+    </script>
+
+</body>
+
+</html>
