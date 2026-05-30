@@ -65,13 +65,14 @@ ctx.imageSmoothingEnabled = false;
 
         const congImg = new Image();
         congImg.src = "cong.png";
-
+        const tanCayImg = new Image();
+        tanCayImg.src = "tanCay.png";
         // KÍCH THƯỚC MAP THẬT
         const MAP_WIDTH = 1280;
         const MAP_HEIGHT = 960;
         
-        let GATE_X = 535;
-        let GATE_Y = 665;
+        let GATE_X = 405;
+        let GATE_Y = 659    ;
         // =========================
         // CAMERA
         // =========================
@@ -204,9 +205,9 @@ ctx.imageSmoothingEnabled = false;
             },
 
             {
-                x: 510,
+                x: 505,
                 y: 670,
-                width: 40,
+                width: 45,
                 height: 180
             },
 
@@ -279,7 +280,41 @@ ctx.imageSmoothingEnabled = false;
             { x: 765, y: 640, width: 47, height: 35 }
 
         ];
+        const trees = [
 
+    { x: 390, y: 260 },
+    { x: 500, y: 260 },
+
+    { x: 700, y: 260 },
+    { x: 785, y: 260 },
+
+    { x: 440, y: 345 },
+    { x: 735, y: 345 },
+
+    { x: 415, y: 440 },
+    { x: 760, y: 440 },
+
+    { x: 430, y: 540 },
+    { x: 732, y: 540 },
+
+    { x: 397, y: 643 },
+    { x: 765, y: 640 }
+
+];
+     const TREE_TOPS = [
+
+    { x: 405, y: 250 },
+    { x: 693, y: 255 },
+
+    { x: 375, y: 350 },
+    { x: 722, y: 350 },
+
+    { x: 380, y: 450 },
+    { x: 685, y: 445 },
+
+    { x: 353, y: 545 },
+    { x: 717, y: 545 } 
+];
         // =========================
         // INPUT
         // =========================
@@ -293,6 +328,16 @@ ctx.imageSmoothingEnabled = false;
         document.addEventListener("keyup", (e) => {
             keys[e.key.toLowerCase()] = false;
         });
+        document.addEventListener("keydown", e => {
+
+    if (e.key === "j") GATE_X -= 1;
+    if (e.key === "l") GATE_X += 1;
+
+    if (e.key === "i") GATE_Y -= 1;
+    if (e.key === "k") GATE_Y += 1;
+
+    console.log(GATE_X, GATE_Y);
+});
 
         // =========================
         // COLLISION
@@ -308,16 +353,6 @@ ctx.imageSmoothingEnabled = false;
                 a.y + a.height > b.y
             );
         }
-        document.addEventListener("keydown", e => {
-
-    if (e.key === "j") GATE_X -= 5;
-    if (e.key === "l") GATE_X += 5;
-
-    if (e.key === "i") GATE_Y -= 5;
-    if (e.key === "k") GATE_Y += 5;
-
-    console.log(GATE_X, GATE_Y);
-});
 
         // =========================
         // UPDATE
@@ -518,7 +553,24 @@ if (mapImg.complete) {
         ctx.drawImage(
             congImg,
             GATE_X,
-            GATE_Y
+            GATE_Y,
+            445,
+            193
+        );
+    }
+}
+function drawTreeTops() {
+
+    if (!tanCayImg.complete) return;
+
+    for (const tree of TREE_TOPS) {
+
+        ctx.drawImage(
+            tanCayImg,
+            tree.x+30,
+            tree.y+30,
+            80,
+            70
         );
     }
 }
@@ -555,15 +607,14 @@ function drawPlayer() {
 
 
 // Nếu nhân vật ở trong sân trường
+drawPlayer();
+drawTreeTops();
+drawGate();
+
 if (player.y + player.height < 760) {
 
-    drawPlayer();
     drawGate();
 
-} else {
-
-    drawGate();
-    drawPlayer();
 }
 
             // ======================
@@ -577,24 +628,24 @@ if (player.y + player.height < 760) {
                 player.x,
                 player.y,
                 player.width,
-                player.height
-            );
+               player.height
+           );
 
             // ======================
             // OBSTACLE HITBOX
             // ======================
 
-            // ctx.strokeStyle = "red";
+             ctx.strokeStyle = "red";
 
-           // for (const obstacle of obstacles) {
+            for (const obstacle of obstacles) {
 
-             //   ctx.strokeRect(
-               //     obstacle.x,
-                 //   obstacle.y,
-                   // obstacle.width,
-                   // obstacle.height
-               // );
-            //}
+                ctx.strokeRect(
+                    obstacle.x,
+                    obstacle.y,
+                    obstacle.width,
+                    obstacle.height
+                );
+            }
 
             ctx.restore();
         } 
