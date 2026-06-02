@@ -25,15 +25,101 @@
             image-rendering: pixelated;
             image-rendering: crisp-edges;
         }
+        .controlBtn{
+    width:min(70px,18vw);
+    height:min(70px,18vw);
+
+    border-radius:50%;
+    border:none;
+    margin:5px;
+
+    font-size:min(32px,8vw);
+    font-weight:bold;
+
+    background:rgba(255,255,255,0.2);
+    color:white;
+
+    backdrop-filter: blur(4px);
+}
+
+#mobileControls{
+    display:none;
+    position:absolute;
+    bottom:30px;
+    left:30px;
+    z-index:999;
+    user-select:none;
+    touch-action:none;
+}
+#mobileE{
+    display:none;
+
+    position:absolute;
+    right:30px;
+    bottom:80px;
+
+    z-index:999;
+}
+#mobileE{
+    display:none;
+
+    position:fixed;
+    right:30px;
+    bottom:120px;
+}
     </style>
 </head>
 
 <body>
 
     <canvas id="game"></canvas>
+    <div id="mobileControls">
 
+    <div class="row">
+        <button class="controlBtn"
+            ontouchstart="pressKey('w')"
+            ontouchend="releaseKey('w')">
+            ↑
+        </button>
+    </div>
+    <button id="mobileE"
+class="controlBtn"
+ontouchstart="pressKey('e')"
+ontouchend="releaseKey('e')">
+E
+</button>
+
+    <div class="row">
+
+        <button class="controlBtn"
+            ontouchstart="pressKey('a')"
+            ontouchend="releaseKey('a')">
+            ←
+        </button>
+
+        <button class="controlBtn"
+            ontouchstart="pressKey('s')"
+            ontouchend="releaseKey('s')">
+            ↓
+        </button>
+
+        <button class="controlBtn"
+            ontouchstart="pressKey('d')"
+            ontouchend="releaseKey('d')">
+            →
+        </button>
+
+    </div>
+
+</div>
     <script>
+    function pressKey(key){
+    keys[key] = true;
+}
 
+function releaseKey(key){
+    keys[key] = false;
+}
         // =========================
         // CANVAS
         // =========================
@@ -336,10 +422,15 @@ let interactButtonVisible = false;
         // INPUT
         // =========================
         const keys = {};
-        let mobileUp = false;
-        let mobileDown = false;
-        let mobileLeft = false;
-        let mobileRight = false;
+        if (
+    "ontouchstart" in window ||
+    navigator.maxTouchPoints > 0
+){
+    document.getElementById(
+        "mobileControls"
+    ).style.display = "block";
+}
+
         document.addEventListener("keydown", (e) => {
             keys[e.key.toLowerCase()] = true;
         });
@@ -347,40 +438,7 @@ let interactButtonVisible = false;
         document.addEventListener("keyup", (e) => {
             keys[e.key.toLowerCase()] = false;
         });
-        canvas.addEventListener("touchstart", handleTouch);
 
-canvas.addEventListener("touchmove", handleTouch);
-
-canvas.addEventListener("touchend", () => {
-    mobileUp = false;
-    mobileDown = false;
-    mobileLeft = false;
-    mobileRight = false;
-});
-canvas.addEventListener("touchend", (e) => {
-    if (!nearBaoVe) return;
-
-    const touch = e.changedTouches[0];
-
-    const btnX = canvas.width - 50;
-    const btnY = canvas.height - 50;
-
-    const dx = touch.clientX - btnX;
-    const dy = touch.clientY - btnY;
-
-    if (Math.sqrt(dx * dx + dy * dy) < 30) {
-        showDialog = !showDialog;
-    }
-});
-        document.addEventListener("keydown", (e) => {
-
-    if (
-        e.key.toLowerCase() === "e" &&
-        nearBaoVe
-    ) {
-        showDialog = !showDialog;
-    }
-});
 
         // =========================
         // COLLISION
@@ -407,65 +465,7 @@ canvas.addEventListener("touchend", (e) => {
         // =========================
         // UPDATE
         // =========================
-function handleTouch(e) {
 
-    e.preventDefault();
-
-    mobileUp = false;
-    mobileDown = false;
-    mobileLeft = false;
-    mobileRight = false;
-
-    const touch = e.touches[0];
-
-    const x = touch.clientX;
-    const y = touch.clientY;
-
-    const size = 60;
-
-    const baseX = 80;
-    const baseY = canvas.height - 80;
-
-    // UP
-    if (
-        x >= baseX &&
-        x <= baseX + size &&
-        y >= baseY - size &&
-        y <= baseY
-    ) {
-        mobileUp = true;
-    }
-
-    // DOWN
-    else if (
-        x >= baseX &&
-        x <= baseX + size &&
-        y >= baseY + size &&
-        y <= baseY + size * 2
-    ) {
-        mobileDown = true;
-    }
-
-    // LEFT
-    else if (
-        x >= baseX - size &&
-        x <= baseX &&
-        y >= baseY &&
-        y <= baseY + size
-    ) {
-        mobileLeft = true;
-    }
-
-    // RIGHT
-    else if (
-        x >= baseX + size &&
-        x <= baseX + size * 2 &&
-        y >= baseY &&
-        y <= baseY + size
-    ) {
-        mobileRight = true;
-    }
-}
         function update(deltaTime) {
 
             player.moving = false;
@@ -477,7 +477,7 @@ function handleTouch(e) {
             // MOVE
             // ======================
 
-            if (  keys["w"] || keys["arrowup"] || mobileUp) {
+           if (keys["w"] || keys["arrowup"]) {
 
                 nextY -= player.speed;
 
@@ -485,7 +485,7 @@ function handleTouch(e) {
                 player.moving = true;
             }
 
-            if (keys["s"] || keys["arrowdown"] || mobileDown) {
+            if (keys["s"] || keys["arrowdown"]) {
 
                 nextY += player.speed;
 
@@ -493,7 +493,7 @@ function handleTouch(e) {
                 player.moving = true;
             }
 
-            if (keys["a"] || keys["arrowleft"] || mobileLeft) {
+            if (keys["a"] || keys["arrowleft"]) {
 
                 nextX -= player.speed;
 
@@ -501,13 +501,19 @@ function handleTouch(e) {
                 player.moving = true;
             }
 
-            if (keys["d"] || keys["arrowright"] || mobileRight) {
+            if (keys["d"] || keys["arrowright"]) {
 
                 nextX += player.speed;
 
                 player.direction = "right";
                 player.moving = true;
             }
+            if (keys["e"] && nearBaoVe) {
+
+    showDialog = !showDialog;
+
+    keys["e"] = false;
+}
             // ======================
 
             // ======================
@@ -532,6 +538,14 @@ nearBaoVe = isColliding(
     }
 );
 interactButtonVisible = nearBaoVe;
+const mobileE =
+    document.getElementById("mobileE");
+
+if (mobileE) {
+
+    mobileE.style.display =
+        nearBaoVe ? "block" : "none";
+}
 
 let blocked = false;
 
@@ -857,74 +871,6 @@ if (showDialog) {
         boxX + 15,
         boxY + 80
     );
-}
-if (isMobile() && interactButtonVisible) {
-
-    const btnX =
-        camera.x +
-        canvas.width / camera.zoom - 50;
-
-    const btnY =
-        camera.y +
-        canvas.height / camera.zoom - 50;
-
-    ctx.fillStyle = "rgba(0,0,0,0.7)";
-
-    ctx.beginPath();
-    ctx.arc(
-        btnX,
-        btnY,
-        25,
-        0,
-        Math.PI * 2
-    );
-    ctx.fill();
-
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.fillStyle = "white";
-    ctx.font = "18px Arial";
-    ctx.textAlign = "center";
-
-    ctx.fillText(
-        "E",
-        btnX,
-        btnY + 6
-    );
-}
-if (isMobile()) {
-
-    const baseX = camera.x + 80;
-    const baseY =
-        camera.y +
-        canvas.height / camera.zoom - 80;
-
-    ctx.fillStyle = "rgba(0,0,0,0.6)";
-
-const size = 60;
-
-// UP
-ctx.fillRect(baseX, baseY - size, size, size);
-
-// DOWN
-ctx.fillRect(baseX, baseY + size, size, size);
-
-// LEFT
-ctx.fillRect(baseX - size, baseY, size, size);
-
-// RIGHT
-ctx.fillRect(baseX + size, baseY, size, size);
-
-    ctx.fillStyle = "white";
-    ctx.font = "20px Arial";
-    ctx.textAlign = "center";
-
-    ctx.fillText("↑", baseX + 30, baseY - 20);
-ctx.fillText("↓", baseX + 30, baseY + 100);
-ctx.fillText("←", baseX - 30, baseY + 40);
-ctx.fillText("→", baseX + 90, baseY + 40);
 }
             ctx.restore();
         } 
