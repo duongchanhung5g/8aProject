@@ -335,9 +335,11 @@ let interactButtonVisible = false;
         // =========================
         // INPUT
         // =========================
-
         const keys = {};
-
+        let mobileUp = false;
+        let mobileDown = false;
+        let mobileLeft = false;
+        let mobileRight = false;
         document.addEventListener("keydown", (e) => {
             keys[e.key.toLowerCase()] = true;
         });
@@ -345,7 +347,17 @@ let interactButtonVisible = false;
         document.addEventListener("keyup", (e) => {
             keys[e.key.toLowerCase()] = false;
         });
-        canvas.addEventListener("touchstart", (e) => {
+        canvas.addEventListener("touchstart", handleTouch);
+
+canvas.addEventListener("touchmove", handleTouch);
+
+canvas.addEventListener("touchend", () => {
+    mobileUp = false;
+    mobileDown = false;
+    mobileLeft = false;
+    mobileRight = false;
+});
+canvas.addEventListener("touchstart", (e) => {
 
     if (!nearBaoVe) return;
 
@@ -354,14 +366,10 @@ let interactButtonVisible = false;
     const btnX = canvas.width - 50;
     const btnY = canvas.height - 50;
 
-    const dx =
-        touch.clientX - btnX;
+    const dx = touch.clientX - btnX;
+    const dy = touch.clientY - btnY;
 
-    const dy =
-        touch.clientY - btnY;
-
-    const distance =
-        Math.sqrt(dx * dx + dy * dy);
+    const distance = Math.sqrt(dx * dx + dy * dy);
 
     if (distance < 30) {
 
@@ -403,7 +411,57 @@ let interactButtonVisible = false;
         // =========================
         // UPDATE
         // =========================
+        function handleTouch(e) {
 
+    mobileUp = false;
+    mobileDown = false;
+    mobileLeft = false;
+    mobileRight = false;
+
+    const touch = e.touches[0];
+
+    const x = touch.clientX;
+    const y = touch.clientY;
+
+    const centerX = 80;
+    const centerY = canvas.height - 80;
+
+    if (
+        x > centerX &&
+        x < centerX + 30 &&
+        y > centerY - 40 &&
+        y < centerY - 10
+    ) {
+        mobileUp = true;
+    }
+
+    if (
+        x > centerX &&
+        x < centerX + 30 &&
+        y > centerY + 40 &&
+        y < centerY + 70
+    ) {
+        mobileDown = true;
+    }
+
+    if (
+        x > centerX - 40 &&
+        x < centerX - 10 &&
+        y > centerY &&
+        y < centerY + 30
+    ) {
+        mobileLeft = true;
+    }
+
+    if (
+        x > centerX + 40 &&
+        x < centerX + 70 &&
+        y > centerY &&
+        y < centerY + 30
+    ) {
+        mobileRight = true;
+    }
+}
         function update(deltaTime) {
 
             player.moving = false;
@@ -415,7 +473,7 @@ let interactButtonVisible = false;
             // MOVE
             // ======================
 
-            if (keys["w"] || keys["arrowup"]) {
+            if (  keys["w"] || keys["arrowup"] || mobileUp) {
 
                 nextY -= player.speed;
 
@@ -423,7 +481,7 @@ let interactButtonVisible = false;
                 player.moving = true;
             }
 
-            if (keys["s"] || keys["arrowdown"]) {
+            if (keys["s"] || keys["arrowdown"] || mobileDown) {
 
                 nextY += player.speed;
 
@@ -431,7 +489,7 @@ let interactButtonVisible = false;
                 player.moving = true;
             }
 
-            if (keys["a"] || keys["arrowleft"]) {
+            if (keys["a"] || keys["arrowleft"] || mobileLeft) {
 
                 nextX -= player.speed;
 
@@ -439,7 +497,7 @@ let interactButtonVisible = false;
                 player.moving = true;
             }
 
-            if (keys["d"] || keys["arrowright"]) {
+            if (keys["d"] || keys["arrowright"] || mobileRight) {
 
                 nextX += player.speed;
 
@@ -831,6 +889,56 @@ if (isMobile() && interactButtonVisible) {
         btnX,
         btnY + 6
     );
+}
+if (isMobile()) {
+
+    const baseX = camera.x + 80;
+    const baseY =
+        camera.y +
+        canvas.height / camera.zoom - 80;
+
+    ctx.fillStyle = "rgba(0,0,0,0.6)";
+
+    // UP
+    ctx.fillRect(
+        baseX,
+        baseY - 40,
+        30,
+        30
+    );
+
+    // DOWN
+    ctx.fillRect(
+        baseX,
+        baseY + 40,
+        30,
+        30
+    );
+
+    // LEFT
+    ctx.fillRect(
+        baseX - 40,
+        baseY,
+        30,
+        30
+    );
+
+    // RIGHT
+    ctx.fillRect(
+        baseX + 40,
+        baseY,
+        30,
+        30
+    );
+
+    ctx.fillStyle = "white";
+    ctx.font = "20px Arial";
+    ctx.textAlign = "center";
+
+    ctx.fillText("↑", baseX + 15, baseY - 18);
+    ctx.fillText("↓", baseX + 15, baseY + 62);
+    ctx.fillText("←", baseX - 25, baseY + 22);
+    ctx.fillText("→", baseX + 55, baseY + 22);
 }
             ctx.restore();
         } 
