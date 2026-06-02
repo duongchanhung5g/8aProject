@@ -67,6 +67,8 @@ ctx.imageSmoothingEnabled = false;
         congImg.src = "cong.png";
         const tanCayImg = new Image();
         tanCayImg.src = "tanCay.png";
+        const baoVeImg = new Image();
+        baoVeImg.src = "BaoVe.png";
         // KÍCH THƯỚC MAP THẬT
         const MAP_WIDTH = 1280;
         const MAP_HEIGHT = 960;
@@ -118,11 +120,11 @@ ctx.imageSmoothingEnabled = false;
         const player = {
 
             x: 620,
-            y: 760,
+            y: 890,
 
             // SPRITE SIZE
             width: 20,
-            height: 15,
+            height: 25,
 
             speed: 1,
 
@@ -135,6 +137,21 @@ ctx.imageSmoothingEnabled = false;
 
             moving: false
         };
+        const baoVe = {
+        x: 663,
+        y: 800,
+        width: 60,
+        height: 45,
+    };
+    const npcObstacle = {
+    x: 680,
+    y: 800,
+    width: 30,
+    height: 40
+};
+let nearBaoVe = false;
+let showDialog = false;
+let interactButtonVisible = false;
 
         // =========================
         // HITBOXES
@@ -328,15 +345,37 @@ ctx.imageSmoothingEnabled = false;
         document.addEventListener("keyup", (e) => {
             keys[e.key.toLowerCase()] = false;
         });
-        document.addEventListener("keydown", e => {
+        canvas.addEventListener("touchstart", (e) => {
 
-    if (e.key === "j") GATE_X -= 1;
-    if (e.key === "l") GATE_X += 1;
+    if (!nearBaoVe) return;
 
-    if (e.key === "i") GATE_Y -= 1;
-    if (e.key === "k") GATE_Y += 1;
+    const touch = e.touches[0];
 
-    console.log(GATE_X, GATE_Y);
+    const btnX = canvas.width - 50;
+    const btnY = canvas.height - 50;
+
+    const dx =
+        touch.clientX - btnX;
+
+    const dy =
+        touch.clientY - btnY;
+
+    const distance =
+        Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < 30) {
+
+        showDialog = !showDialog;
+    }
+});
+        document.addEventListener("keydown", (e) => {
+
+    if (
+        e.key.toLowerCase() === "e" &&
+        nearBaoVe
+    ) {
+        showDialog = !showDialog;
+    }
 });
 
         // =========================
@@ -353,6 +392,13 @@ ctx.imageSmoothingEnabled = false;
                 a.y + a.height > b.y
             );
         }
+        function isMobile() {
+
+        return (
+            "ontouchstart" in window ||
+            navigator.maxTouchPoints > 0
+        );
+    }
 
         // =========================
         // UPDATE
@@ -400,6 +446,7 @@ ctx.imageSmoothingEnabled = false;
                 player.direction = "right";
                 player.moving = true;
             }
+            // ======================
 
             // ======================
             // PLAYER HITBOX
@@ -407,27 +454,38 @@ ctx.imageSmoothingEnabled = false;
 
             const nextPlayer = {
 
-                x: nextX,
-                y: nextY,
+    x: nextX,
+    y: nextY,
 
-                width: player.width,
-                height: player.height
-            };
+    width: player.width,
+    height: player.height
+};
+nearBaoVe = isColliding(
+    nextPlayer,
+    {
+        x: baoVe.x,
+        y: baoVe.y,
+        width: baoVe.width,
+        height: baoVe.height
+    }
+);
+interactButtonVisible = nearBaoVe;
 
-            // ======================
-            // COLLISION
-            // ======================
+let blocked = false;
 
-            let blocked = false;
+// va chạm bảo vệ
+if (isColliding(nextPlayer, npcObstacle)) {
+    blocked = true;
+}
 
-            for (const obstacle of obstacles) {
+for (const obstacle of obstacles) {
 
-                if (isColliding(nextPlayer, obstacle)) {
+    if (isColliding(nextPlayer, obstacle)) {
 
-                    blocked = true;
-                    break;
-                }
-            }
+        blocked = true;
+        break;
+    }
+}
 
             if (!blocked) {
 
@@ -583,7 +641,31 @@ const currentAnimation =
 
 const currentImage =
     currentAnimation[player.currentFrame];
+function drawBaoVe() {
 
+    if (baoVeImg.complete) {
+
+        ctx.drawImage(
+            baoVeImg,
+            baoVe.x,
+            baoVe.y,
+            baoVe.width,
+            baoVe.height
+        );
+    }
+}
+if (nearBaoVe && !isMobile()) {
+
+    ctx.fillStyle = "white";
+    ctx.font = "12px Arial";
+    ctx.textAlign = "center";
+
+    ctx.fillText(
+        "E",
+        baoVe.x + baoVe.width / 2,
+        baoVe.y - 10
+    );
+}
 function drawPlayer() {
 
     if (
@@ -610,6 +692,7 @@ function drawPlayer() {
 drawPlayer();
 drawTreeTops();
 drawGate();
+drawBaoVe();
 
 if (player.y + player.height < 760) {
 
@@ -646,7 +729,109 @@ if (player.y + player.height < 760) {
                     obstacle.height
                 );
             }
+                        ctx.strokeStyle = "cyan";
 
+            ctx.strokeRect(
+                npcObstacle.x,
+                npcObstacle.y,
+                npcObstacle.width,
+                npcObstacle.height
+            );
+if (showDialog) {
+
+    const boxWidth = 420;
+    const boxHeight = 120;
+
+    const boxX =
+        camera.x +
+        (canvas.width / camera.zoom - boxWidth) / 2;
+
+    const boxY =
+        camera.y +
+        (canvas.height / camera.zoom) -
+        boxHeight - 20;
+
+    // nền
+    ctx.fillStyle = "rgba(0,0,0,0.85)";
+    ctx.fillRect(
+        boxX,
+        boxY,
+        boxWidth,
+        boxHeight
+    );
+
+    // viền
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(
+        boxX,
+        boxY,
+        boxWidth,
+        boxHeight
+    );
+
+    // tên NPC
+    ctx.fillStyle = "yellow";
+    ctx.font = "14px Arial";
+    ctx.textAlign = "left";
+
+    ctx.fillText(
+        "Bảo vệ",
+        boxX + 15,
+        boxY + 25
+    );
+
+    // nội dung
+    ctx.fillStyle = "white";
+
+    ctx.fillText(
+        "Chào em! Hôm nay là ngày đầu tiên",
+        boxX + 15,
+        boxY + 55
+    );
+
+    ctx.fillText(
+        "ở trường. Hãy vào sân trường nhé!",
+        boxX + 15,
+        boxY + 80
+    );
+}
+if (isMobile() && interactButtonVisible) {
+
+    const btnX =
+        camera.x +
+        canvas.width / camera.zoom - 50;
+
+    const btnY =
+        camera.y +
+        canvas.height / camera.zoom - 50;
+
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+
+    ctx.beginPath();
+    ctx.arc(
+        btnX,
+        btnY,
+        25,
+        0,
+        Math.PI * 2
+    );
+    ctx.fill();
+
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = "white";
+    ctx.font = "18px Arial";
+    ctx.textAlign = "center";
+
+    ctx.fillText(
+        "E",
+        btnX,
+        btnY + 6
+    );
+}
             ctx.restore();
         } 
 
