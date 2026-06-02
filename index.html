@@ -413,6 +413,8 @@ canvas.addEventListener("touchstart", (e) => {
         // =========================
 function handleTouch(e) {
 
+    e.preventDefault();
+
     mobileUp = false;
     mobileDown = false;
     mobileLeft = false;
@@ -426,44 +428,44 @@ function handleTouch(e) {
     const centerX = 80;
     const centerY = canvas.height - 80;
 
-    const size = 60;
+    const size = 80;
 
     // UP
     if (
-        x >= centerX &&
-        x <= centerX + size &&
-        y >= centerY - size &&
-        y <= centerY
+        x > centerX &&
+        x < centerX + size &&
+        y > centerY - size &&
+        y < centerY
     ) {
         mobileUp = true;
     }
 
     // DOWN
-    else if (
-        x >= centerX &&
-        x <= centerX + size &&
-        y >= centerY + size &&
-        y <= centerY + size * 2
+    if (
+        x > centerX &&
+        x < centerX + size &&
+        y > centerY + size &&
+        y < centerY + size * 2
     ) {
         mobileDown = true;
     }
 
     // LEFT
-    else if (
-        x >= centerX - size &&
-        x <= centerX &&
-        y >= centerY &&
-        y <= centerY + size
+    if (
+        x > centerX - size &&
+        x < centerX &&
+        y > centerY &&
+        y < centerY + size
     ) {
         mobileLeft = true;
     }
 
     // RIGHT
-    else if (
-        x >= centerX + size &&
-        x <= centerX + size * 2 &&
-        y >= centerY &&
-        y <= centerY + size
+    if (
+        x > centerX + size &&
+        x < centerX + size * 2 &&
+        y > centerY &&
+        y < centerY + size
     ) {
         mobileRight = true;
     }
@@ -923,10 +925,10 @@ ctx.fillRect(baseX + size, baseY, size, size);
     ctx.font = "20px Arial";
     ctx.textAlign = "center";
 
-    ctx.fillText("↑", baseX + 15, baseY - 18);
-    ctx.fillText("↓", baseX + 15, baseY + 62);
-    ctx.fillText("←", baseX - 25, baseY + 22);
-    ctx.fillText("→", baseX + 55, baseY + 22);
+    ctx.fillText("↑", baseX + 30, baseY - 20);
+ctx.fillText("↓", baseX + 30, baseY + 100);
+ctx.fillText("←", baseX - 30, baseY + 40);
+ctx.fillText("→", baseX + 90, baseY + 40);
 }
             ctx.restore();
         } 
