@@ -411,7 +411,7 @@ canvas.addEventListener("touchstart", (e) => {
         // =========================
         // UPDATE
         // =========================
-        function handleTouch(e) {
+function handleTouch(e) {
 
     mobileUp = false;
     mobileDown = false;
@@ -426,38 +426,44 @@ canvas.addEventListener("touchstart", (e) => {
     const centerX = 80;
     const centerY = canvas.height - 80;
 
+    const size = 60;
+
+    // UP
     if (
-        x > centerX &&
-        x < centerX + 30 &&
-        y > centerY - 40 &&
-        y < centerY - 10
+        x >= centerX &&
+        x <= centerX + size &&
+        y >= centerY - size &&
+        y <= centerY
     ) {
         mobileUp = true;
     }
 
-    if (
-        x > centerX &&
-        x < centerX + 30 &&
-        y > centerY + 40 &&
-        y < centerY + 70
+    // DOWN
+    else if (
+        x >= centerX &&
+        x <= centerX + size &&
+        y >= centerY + size &&
+        y <= centerY + size * 2
     ) {
         mobileDown = true;
     }
 
-    if (
-        x > centerX - 40 &&
-        x < centerX - 10 &&
-        y > centerY &&
-        y < centerY + 30
+    // LEFT
+    else if (
+        x >= centerX - size &&
+        x <= centerX &&
+        y >= centerY &&
+        y <= centerY + size
     ) {
         mobileLeft = true;
     }
 
-    if (
-        x > centerX + 40 &&
-        x < centerX + 70 &&
-        y > centerY &&
-        y < centerY + 30
+    // RIGHT
+    else if (
+        x >= centerX + size &&
+        x <= centerX + size * 2 &&
+        y >= centerY &&
+        y <= centerY + size
     ) {
         mobileRight = true;
     }
@@ -899,37 +905,19 @@ if (isMobile()) {
 
     ctx.fillStyle = "rgba(0,0,0,0.6)";
 
-    // UP
-    ctx.fillRect(
-        baseX,
-        baseY - 40,
-        30,
-        30
-    );
+const size = 60;
 
-    // DOWN
-    ctx.fillRect(
-        baseX,
-        baseY + 40,
-        30,
-        30
-    );
+// UP
+ctx.fillRect(baseX, baseY - size, size, size);
 
-    // LEFT
-    ctx.fillRect(
-        baseX - 40,
-        baseY,
-        30,
-        30
-    );
+// DOWN
+ctx.fillRect(baseX, baseY + size, size, size);
 
-    // RIGHT
-    ctx.fillRect(
-        baseX + 40,
-        baseY,
-        30,
-        30
-    );
+// LEFT
+ctx.fillRect(baseX - size, baseY, size, size);
+
+// RIGHT
+ctx.fillRect(baseX + size, baseY, size, size);
 
     ctx.fillStyle = "white";
     ctx.font = "20px Arial";
